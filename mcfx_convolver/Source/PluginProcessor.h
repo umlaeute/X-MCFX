@@ -77,11 +77,11 @@ public:
     double getTailLengthSeconds() const;
 
     //==============================================================================
-    int getNumPrograms();
-    int getCurrentProgram();
-    void setCurrentProgram (int index);
-    const String getProgramName (int index);
-    void changeProgramName (int index, const String& newName);
+    int     getNumPrograms();
+    int     getCurrentProgram();
+    void    setCurrentProgram (int index);
+    const   String getProgramName (int index);
+    void    changeProgramName (int index, const String& newName);
 
     //==============================================================================
     void getStateInformation (MemoryBlock& destData);
@@ -92,106 +92,118 @@ public:
     
     // do the loading in a background thread
     void LoadConfigurationAsync(File configFile);
-
     void LoadConfiguration(File configFile); // do the loading
-    
-    void UnloadConfiguration();
-    
     void ReloadConfiguration();
 
-    // for gui
-    bool SaveConfiguration(File zipFile);
-    Atomic<int> _readyToSaveConfiguration;
+    
+    void LoadIRMatrixFilter(File filterFile);
+    void LoadIRMatrixFilterAsync(File filterFile);
+    
+    void unloadConvolver();
+    
+    void initConvolver();
 
-    String getDebugString();
-
-    void SearchPresets(File SearchFolder);
+    // for gui --------------------------------------------------------------------
+    bool    SaveConfiguration(File zipFile);
+    String  getDebugString();
+    void    SearchPresets(File SearchFolder);
+    void    LoadPreset(unsigned int preset);
+    void    LoadPresetByName(String presetName);
     
-    void LoadPreset(unsigned int preset);
-    
-    void LoadPresetByName(String presetName);
-    
+    //returning parameter for gui
     unsigned int getBufferSize();
     unsigned int getConvBufferSize();
     unsigned int getMaxPartitionSize();
-    void setConvBufferSize(unsigned int bufsize);
-    void setMaxPartitionSize(unsigned int maxsize);
-    
-    int getSkippedCyclesCount()
-    {
-        return _skippedCycles.get();
-    }
 
-    void setOscIn(bool arg); // activate osc in
-    bool getOscIn();
-    void setOscInPort(int port);
-    int getOscInPort();
-    void oscMessageReceived(const OSCMessage& message);
+    void    setConvBufferSize(unsigned int bufsize);
+    void    setMaxPartitionSize(unsigned int maxsize);
+    
+    int     getSkippedCyclesCount();
+    
+    // OSC functions --------------------------------------------------------------
+    void    setOscIn(bool arg); // activate osc in
+    bool    getOscIn();
+    void    setOscInPort(int port);
+    int     getOscInPort();
+    void    oscMessageReceived(const OSCMessage& message);
+    
+    // VARIABLES ==================================================================
 
-    Atomic<int> _storeConfigDataInProject;
-
-    File presetDir; // where to search for presets
-    File lastDir; // for open file dialog...
-    
-    String activePreset; // store filename
-    
-    Array<File> _presetFiles;
-    
-    String box_preset_str;
-    
     int _min_in_ch;
     int _min_out_ch;
-    
-    
     int _num_conv;
     
-    File _configFile;
+    bool inputChannelRequired;
     
+    //----------------------------------------------------------------------------
+    File presetDir; // where to search for presets
+    File presetLastDirectory; // for open file dialog...
+    
+    Array<File> _presetFiles;
+    File configFileLoaded;
+    
+    String activePresetName; // store filename
+    String box_preset_str; // string for gui  (is it real necessary?)
+    
+    //----------------------------------------------------------------------------
+    File IRlastDirectory;
+    
+    File filterFileLoaded;
+    
+    String activeFilterName;
+    
+    //----------------------------------------------------------------------------
+    Atomic<int> _readyToSaveConfiguration;
+    Atomic<int> _storeConfigDataInProject;
 
 private:
-
-    void DeleteTemporaryFiles();
-
-    void DebugPrint(String debugText, bool reset=false);
-
     String _DebugText;
     CriticalSection _DebugTextMutex;
-
-
-    File _desConfigFile;
-
-    File _tempConfigZipFile;
-    Array<File> _cleanUpFilesOnExit;
-
-    ConvolverData conv_data;
+    void DebugPrint(String debugText, bool reset=false);
     
-    Array<int> _conv_in; // list with input routing
-    Array<int> _conv_out; // list with output routing
-    
-    
-    double _SampleRate;
-    unsigned int _BufferSize; // size of the processing Block
-    unsigned int _ConvBufferSize; // size of the head convolution block (possibility to make it larger in order to reduce CPU load)
-    unsigned int _MaxPartSize; // maximum size of the partition
-    
-    bool _isProcessing;
-    
-    bool _configLoaded; // is a configuration successfully loaded?
-    
-	bool _paramReload; // vst parameter to allow triggering reload of configuration
-
-    Atomic<int> _skippedCycles; // the number of skipped cycles do to unfinished partitions
-
-    bool loadIr(AudioSampleBuffer* IRBuffer, const File& audioFile, int channel, double &samplerate, float gain=1.f, int offset=0, int length=0);
+    void DeleteTemporaryFiles();
     
 #ifdef USE_ZITA_CONVOLVER
-	Convproc zita_conv; /* zita-convolver engine class instances */
+    Convproc zita_conv; /* zita-convolver engine class instances */
 #else
     MtxConvMaster mtxconv_;
 #endif
     
+    ConvolverData conv_data;
+    
+    Array<int> _conv_in;    // list with input routing
+    Array<int> _conv_out;   // list with output routing
+    
+    File _desConfigFile;    //processor copy of config file?
+    File _tempConfigZipFile;
+    Array<File> _cleanUpFilesOnExit;
+    
+    double          _SampleRate;
+    unsigned int    _BufferSize;        // size of the processing Block
+    unsigned int    _ConvBufferSize;    // size of the head convolution block (possibility to make it larger in order to reduce CPU load)
+    unsigned int    _MaxPartSize;       // maximum size of the partition
+    
+    bool convolverReady; //substitute for _configLoaded ande filterLoaded
+    
+//    bool _configLoaded; // is a configuration successfully loaded?
+	bool _paramReload; // vst parameter to allow triggering reload of configuration
+    Atomic<int> _skippedCycles; // the number of skipped cycles do to unfinished partitions
+    
+    bool _isProcessing;
+    
     bool safemode_; // this will add some latency for hosts that might send partial blocks, done automatically based on host type
-
+    
+    // IR Filter Matrix -----------------------------------------------------------
+    bool filterFileMode;
+    File filterFileToLoad;
+    
+//    bool filterLoaded;
+    
+    // ----------------------------------------------------------------------------
+    
+    bool loadIr(AudioSampleBuffer* IRBuffer, const File& audioFile, int channel, double &samplerate, float gain=1.f, int offset=0, int length=0);
+    
+    // OSC ------------------------------------------------------------------------
     OSCReceiver oscReceiver;
     int _osc_in_port;
     bool _osc_in;

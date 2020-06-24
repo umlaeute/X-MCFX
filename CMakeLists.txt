@@ -71,8 +71,8 @@ IF(APPLE)
 # switch to c++11
    SET(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
    
-   SET( CMAKE_OSX_ARCHITECTURES i386;x86_64 )
-   SET( CMAKE_OSX_DEPLOYMENT_TARGET 10.7 )
+   SET( CMAKE_OSX_ARCHITECTURES x86_64 )
+   SET( CMAKE_OSX_DEPLOYMENT_TARGET 10.7 ) 
 ENDIF (APPLE)
 
 ################################################

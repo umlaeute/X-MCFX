@@ -1,6 +1,4 @@
 /*
- ==============================================================================
- 
  This file is part of the mcfx (Multichannel Effects) plug-in suite.
  Copyright (c) 2013/2014 - Matthias Kronlachner
  www.matthiaskronlachner.com
@@ -23,10 +21,12 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "PluginProcessor.h"
 
+#include "PluginView.h"
 
-//==============================================================================
-/**
-*/
+
+/*==============================================================================*/
+//============================== MAIN EDITOR CLASS ============================== 
+
 class Mcfx_convolverAudioProcessorEditor  : public AudioProcessorEditor,
                                             public Button::Listener,
                                             public ChangeListener,
@@ -35,7 +35,9 @@ class Mcfx_convolverAudioProcessorEditor  : public AudioProcessorEditor,
                                             public TextEditor::Listener
 {
 public:
-    Mcfx_convolverAudioProcessorEditor (Mcfx_convolverAudioProcessor* ownerFilter);
+    //Mcfx_convolverAudioProcessorEditor (Mcfx_convolverAudioProcessor* ownerFilter);
+    Mcfx_convolverAudioProcessorEditor (Mcfx_convolverAudioProcessor&);
+
     ~Mcfx_convolverAudioProcessorEditor();
 
     //==============================================================================
@@ -43,6 +45,7 @@ public:
     void paint (Graphics& g);
     
     void resized();
+
     void buttonClicked (Button* buttonThatWasClicked);
     
     void changeListenerCallback (ChangeBroadcaster *source);
@@ -60,37 +63,27 @@ public:
     void UpdateText();
     
     void timerCallback();
+    
+    int getInputChannelFromDialog();
 
 private:
-    Mcfx_convolverAudioProcessor* getProcessor() const
-    {
-        return static_cast <Mcfx_convolverAudioProcessor*> (getAudioProcessor());
-    }
-    TooltipWindow tooltipWindow;
+//    Mcfx_convolverAudioProcessor* getProcessor() const
+//    {
+//        return static_cast <Mcfx_convolverAudioProcessor*> (getAudioProcessor());
+//    }
+
+    Mcfx_convolverAudioProcessor& processor;
     
-    Label label;
-    TextEditor txt_preset;
+    View view;
+
+    TooltipWindow tooltipWindow;
+
     PopupMenu popup_presets;
     OwnedArray<PopupMenu> popup_submenu;
-    Label label5;
-    TextEditor txt_debug;
-    TextButton btn_open;
-    Label label2;
-    Label label3;
-    Label label4;
-    Label lbl_skippedcycles;
-    Label num_ch;
-    Label num_spk;
-    Label num_hrtf;
-    TextButton btn_preset_folder;
-    ComboBox box_conv_buffer;
-    ComboBox box_maxpart;
-    TextEditor txt_rcv_port;
-    ToggleButton tgl_rcv_active;
-    ToggleButton tgl_save_preset;
     
     LookAndFeel_V3 MyLookAndFeel;
 };
+
 
 
 #endif  // PLUGINEDITOR_H_INCLUDED
