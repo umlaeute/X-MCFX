@@ -1,0 +1,14 @@
+JUCE/docs/.DS_Store
+JUCE/extras/BinaryBuilder/.DS_Store
+JUCE/extras/Build/juce_build_tools/.DS_Store
+.DS_Store
+SDKs
+_Bundle-resources
+_mac-libs
+build
+cmake/_Subproject.cmake
+osx_resources/_tempMacOSXBundleInfo.plist
+toDelete
+x-mcfx_convolver/_JuceLibraryCode
+xcode
+_CMakeLists.txt
