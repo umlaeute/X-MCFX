@@ -47,6 +47,8 @@ _MaxPartSize(MAX_PART_SIZE),
 
 _isProcessing(false),
 
+presetMode(PresetMode::conf),
+
 unloading(false),
 
 convolverReady(false),
@@ -278,13 +280,14 @@ void Mcfx_convolverAudioProcessor::run()
     setConvolverStatus(1);
     
     //unload first....
-    if (convolverReady) {
+    if (convolverReady)
+    {
         unloadConvolver();
     }
     
     if (!unloading)
     {
-        if (filterFileMode)
+        if (presetMode == PresetMode::wav)
             LoadIRMatrixFilter(filterFileToLoad);
         else
             LoadConfiguration(targetFileToLoad);
@@ -700,7 +703,7 @@ void Mcfx_convolverAudioProcessor::LoadIRMatrixFilterAsync(File filterFile)
 {
     DebugPrint("Loading IR matrix filter...\n\n");
     filterFileToLoad = filterFile;
-    filterFileMode = true;      //need to be disablie in somewhere (config preset conflict)
+    presetMode = PresetMode::wav;   //need to be disablie in somewhere (config preset conflict)
     startThread(6); // medium priority
 }
 
@@ -1118,7 +1121,7 @@ void Mcfx_convolverAudioProcessor::LoadPresetByName(String presetName)
     }
 }
 
-void Mcfx_convolverAudioProcessor::changePresetType()
+void Mcfx_convolverAudioProcessor::changePresetType(PresetMode mode)
 {
     DeleteTemporaryFiles();
     unloadConfigurationAsync();
@@ -1305,7 +1308,7 @@ void Mcfx_convolverAudioProcessor::getStateInformation (MemoryBlock& destData)
     xml.setAttribute ("activePresetName", activePresetName);
     xml.setAttribute ("presetDir", presetDir.getFullPathName());
     
-    xml.setAttribute("filterFileMode", filterFileMode);
+//    xml.setAttribute("wavePresetMode", wavePresetMode);
     
     xml.setAttribute("ConvBufferSize", (int)_ConvBufferSize);
     xml.setAttribute("MaxPartSize", (int)_MaxPartSize);
