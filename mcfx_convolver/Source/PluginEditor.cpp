@@ -91,6 +91,17 @@ void Mcfx_convolverAudioProcessorEditor::timerCallback()
     view.debugText.moveCaretToEnd();
 }
 
+void Mcfx_convolverAudioProcessorEditor::changeListenerCallback (ChangeBroadcaster *source)
+{
+    UpdateText();
+    UpdatePresets();
+    repaint();
+    if (processor.inputChannelRequired)
+    {
+        view.inputChannelDialog.setVisible(true);
+    }
+}
+
 /// update the overall plugin text based on the processor data and the stored one
 void Mcfx_convolverAudioProcessorEditor::UpdateText()
 {
@@ -121,6 +132,12 @@ void Mcfx_convolverAudioProcessorEditor::UpdateText()
             break;
         default:
             break;
+    }
+    
+    if (processor.newStatusText)
+    {
+        view.statusText.setText(processor.getStatusText());
+        processor.newStatusText = false;
     }
     
 //  ---------------------------------------------------------------------------------------
@@ -341,17 +358,6 @@ void Mcfx_convolverAudioProcessorEditor::menuItemChosenCallback (int result, Mcf
 //        demoComponent->processor.LoadPreset(result - 1);
         File empty;
         demoComponent->processor.LoadPresetFromMenu(result - 1);
-    }
-}
-
-void Mcfx_convolverAudioProcessorEditor::changeListenerCallback (ChangeBroadcaster *source)
-{
-    UpdateText();
-    UpdatePresets();
-    repaint();
-    if (processor.inputChannelRequired)
-    {
-        view.inputChannelDialog.setVisible(true);
     }
 }
 
