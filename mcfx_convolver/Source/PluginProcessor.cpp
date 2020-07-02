@@ -34,8 +34,8 @@
 
 #define MAX_PART_SIZE 8192
 
-#define VAL(str) #str
-#define TOSTRING(str) VAL(str)
+// #define VAL(str) #str
+// #define TOSTRING(str) VAL(str)
 
 //==============================================================================
 Mcfx_convolverAudioProcessor::Mcfx_convolverAudioProcessor() :
@@ -493,7 +493,7 @@ void Mcfx_convolverAudioProcessor::LoadConfiguration(File configFile)
                 String debug;
                 debug << "ERROR: channel assignment not feasible, needed:" << "\n";
                 debug << in_ch << "input channels and " << out_ch << "output channels.\n";
-                debug << "Current IN/OUT: " << TOSTRING(NUM_CHANNELS) << "/" << TOSTRING(NUM_CHANNELS);
+                debug << "Current IN/OUT: " << NUM_CHANNELS << "/" << NUM_CHANNELS;
                 DebugPrint(debug << "\n");
             }
             else
