@@ -77,9 +77,10 @@ _osc_in(false),
 
 newStatusText(false)
 {
-    _SampleRate = getSampleRate();
-    _BufferSize = getBlockSize();
-    _ConvBufferSize = getBlockSize();
+    // check these values... they are all zeros in this point
+//    _SampleRate = getSampleRate();
+//    _BufferSize = getBlockSize();
+//    _ConvBufferSize = getBlockSize();
     
     defaultPresetDir = defaultPresetDir.getSpecialLocation(File::userApplicationDataDirectory).getChildFile("mcfx/convolver_presets");
     
@@ -238,13 +239,30 @@ void Mcfx_convolverAudioProcessor::changeProgramName (int index, const String& n
 void Mcfx_convolverAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     //line-up in case host samplerate/buffer changes
-    if (_SampleRate != sampleRate || _BufferSize != samplesPerBlock)
+    
+    // buffer size line-up ------------------------------------------------------------------------
+    bool change = false;
+    
+    if (_SampleRate != sampleRate)
     {
         _SampleRate = sampleRate;
-        _BufferSize = samplesPerBlock;
-        
-        ReloadConfiguration();
+        change = true;
     }
+    if (_BufferSize != samplesPerBlock)
+    {
+        _BufferSize = samplesPerBlock;
+        change = true;
+    }
+    if (_ConvBufferSize < _BufferSize)
+    {
+        _ConvBufferSize = _BufferSize;
+        change = true;
+    }
+    
+    if (convolverReady && change)
+        ReloadConfiguration();
+
+    change = false;
     
     if (convolverReady)
     {
@@ -748,10 +766,6 @@ void Mcfx_convolverAudioProcessor::LoadIRMatrixFilter(File filterFile)
         return;
     }
     
-    // buffer size line-up ------------------------------------------------------------------------
-    if (_ConvBufferSize < _BufferSize)
-        _ConvBufferSize = _BufferSize;
-    
     _ConvBufferSize = nextPowerOfTwo(_ConvBufferSize);
     
     //---------------------------------------------------------------------------------------------
@@ -819,6 +833,10 @@ void Mcfx_convolverAudioProcessor::LoadIRMatrixFilter(File filterFile)
     
     if (loadIr(&TempAudioBuffer, filterFile, -1, src_samplerate, gain, 0, 0)) // offset/length has to be done while processing individual irs
     {
+        ///kill the thread
+        if (tempInputChannels == -2)
+            return;
+        
         int outChannels = TempAudioBuffer.getNumChannels();
         int irLength;
         
@@ -1070,10 +1088,13 @@ void Mcfx_convolverAudioProcessor::getInChannels(int waveFileLength)
         {
             sendChangeMessage();
             wait(-1);
-            // need a thread kill check here...
+            /// thread kill
             if (threadShouldExit())
+            {
+                tempInputChannels = -2;
                 return;
-            
+            }
+            ///value returned check
             if (tempInputChannels == -1)
             {
                 inChannelStatus = InChannelStatus::agreed;
@@ -1084,11 +1105,6 @@ void Mcfx_convolverAudioProcessor::getInChannels(int waveFileLength)
                 int irLength = waveFileLength/tempInputChannels;
                 if (irLength*tempInputChannels != waveFileLength)
                 {
-//                    String debug;
-//                    debug << "ERROR: length of wav file is not multiple of irLength*numinChannels!" << filterFile.getFullPathName();
-//                    addNewStatus("ERROR: length of wavefile not multiple IRLength * numinChannels!");
-//
-//                    DebugPrint(debug << "\n\n");
                     inChannelStatus = InChannelStatus::notMultiple;
                 }
                 else
