@@ -120,11 +120,14 @@ void Mcfx_convolverAudioProcessorEditor::UpdateText()
     {
         view.irMatrixBox.confModeButton.setToggleState(true, dontSendNotification);
         view.irMatrixBox.lastState = View::IRMatrixBox::modeState::conf;
+        view.irMatrixBox.newInChannelsButton.setEnabled(false);
     }
     else
     {
         view.irMatrixBox.wavModeButton.setToggleState(true, dontSendNotification);
         view.irMatrixBox.lastState = View::IRMatrixBox::modeState::wav;
+        if (processor.presetName.isNotEmpty())
+            view.irMatrixBox.newInChannelsButton.setEnabled(true);
     }
     
     switch (processor.getConvolverStatus()) {
@@ -154,7 +157,7 @@ void Mcfx_convolverAudioProcessorEditor::UpdateText()
             break;
         case Mcfx_convolverAudioProcessor::InChannelStatus::notFeasible:
             view.inputChannelDialog.setVisible(true);
-            view.inputChannelDialog.invalidState(View::InputChannelDialog::InvalidType::notFeasible, processor.getTotalNumInputChannels()) ;
+            view.inputChannelDialog.invalidState(View::InputChannelDialog::InvalidType::notFeasible) ;
             view.inputChannelDialog.textEditor.grabKeyboardFocus();
             break;
         case Mcfx_convolverAudioProcessor::InChannelStatus::notMultiple:
@@ -297,7 +300,6 @@ void Mcfx_convolverAudioProcessorEditor::buttonClicked (Button* buttonThatWasCli
             {
                 processor.changePresetType(Mcfx_convolverAudioProcessor::PresetType::conf);
                 view.irMatrixBox.lastState = View::IRMatrixBox::conf;
-                view.irMatrixBox.newInChannelsButton.setEnabled(false);
 //            std::cout << "conf was clicked" << std::endl;
             }
         }
@@ -307,7 +309,6 @@ void Mcfx_convolverAudioProcessorEditor::buttonClicked (Button* buttonThatWasCli
             {
                 processor.changePresetType(Mcfx_convolverAudioProcessor::PresetType::wav);
                 view.irMatrixBox.lastState = View::IRMatrixBox::wav;
-                view.irMatrixBox.newInChannelsButton.setEnabled(true);
 //            std::cout << "conf was clicked" << std::endl;
             }
         }
@@ -319,31 +320,11 @@ void Mcfx_convolverAudioProcessorEditor::buttonClicked (Button* buttonThatWasCli
     }
     else if (buttonThatWasClicked == &(view.inputChannelDialog.OKButton))
     {
-//        if (view.inputChannelDialog.diagonalToggle.getToggleState())
-//        {
-//            processor.tempInputChannels = -1;
-//            view.inputChannelDialog.resetState(true);
-//            processor.inputChannelRequired = false;
-//            processor.notify();
-//        }
-//        else if ((getInputChannelFromDialog() > 0)
-//            && getInputChannelFromDialog() <= processor.getTotalNumInputChannels())
-//        {
-//            processor.tempInputChannels = getInputChannelFromDialog();
-//            view.inputChannelDialog.resetState();
-//            processor.inputChannelRequired = false;
-//            processor.notify();
-//        }
-//        else
-//        {
-//            view.inputChannelDialog.invalidState(processor.getTotalNumInputChannels());
-//        }
         if (view.inputChannelDialog.diagonalToggle.getToggleState())
         {
             processor.tempInputChannels = -1;
             ///reset input dialog with toggle uncheck
             view.inputChannelDialog.resetState(true);
-//            processor.inputChannelRequired = false;
         }
         else
         {
