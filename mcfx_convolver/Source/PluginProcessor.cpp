@@ -96,7 +96,8 @@ newStatusText(false)
 
 Mcfx_convolverAudioProcessor::~Mcfx_convolverAudioProcessor()
 {
-    stopThread(10);
+    if(isThreadRunning())
+        stopThread(10);
 #ifdef USE_ZITA_CONVOLVER
     zita_conv.stop_process();
     zita_conv.cleanup();
@@ -352,6 +353,8 @@ void Mcfx_convolverAudioProcessor::LoadConfigurationAsync(File presetFile, bool 
     
     //store for the thread
     setTargetPreset(presetFile);
+    if(isThreadRunning())
+        stopThread(100);
     startThread(6); // medium priority
 }
 
@@ -855,7 +858,7 @@ void Mcfx_convolverAudioProcessor::LoadIRMatrixFilter(File filterFile)
             inChannels = tempInputChannels;
         }
          
-        
+        /*
         if ((inChannels > getTotalNumInputChannels()) || outChannels > getTotalNumOutputChannels())
         {
             debug.clear();
@@ -867,7 +870,7 @@ void Mcfx_convolverAudioProcessor::LoadIRMatrixFilter(File filterFile)
             status << "ERROR: In/Out plugin channels not feasible. " << "Need " << inChannels << " ins, " << outChannels << " outs";
             addNewStatus(status);
             return;
-        }
+        }*/
         
         if (length <= 0)
             length = irLength-offset;
@@ -929,6 +932,7 @@ void Mcfx_convolverAudioProcessor::LoadIRMatrixFilter(File filterFile)
     sendChangeMessage(); // notify editor
     
     //BLOCK save config/wave as zip file
+    /*
     _tempConfigZipFile = _tempConfigZipFile.createTempFile(".zip");
     _cleanUpFilesOnExit.add(_tempConfigZipFile);
     
@@ -952,6 +956,7 @@ void Mcfx_convolverAudioProcessor::LoadIRMatrixFilter(File filterFile)
     }
     
     sendChangeMessage(); // notify editor again. Ready to save configuration to zip (wavefile)
+    */
 }
 
 void Mcfx_convolverAudioProcessor::loadConvolver()
@@ -1037,6 +1042,7 @@ void Mcfx_convolverAudioProcessor::unloadConvolver()
     
     _min_in_ch = 0;
     _min_out_ch = 0;
+    _num_conv = 0;
     
 #ifdef USE_ZITA_CONVOLVER
     
@@ -1588,6 +1594,7 @@ void Mcfx_convolverAudioProcessor::getStateInformation (MemoryBlock& destData)
             if (_tempConfigZipFile.loadFileAsData(tempFileBlock))
                 xml.setAttribute("configData", tempFileBlock.toBase64Encoding());
         }
+        
         xml.setAttribute("presetFileName", activePresetName);
         
         if (presetType == PresetType::wav)
