@@ -33,10 +33,7 @@
 #define CONVPROC_SCHEDULER_CLASS SCHED_FIFO
 #define THREAD_SYNC_MODE true
 
-#define MAX_PART_SIZE 8192
-
-// #define VAL(str) #str
-// #define TOSTRING(str) VAL(str)
+#define MAX_PART_SIZE 65536
 
 //==============================================================================
 Mcfx_convolverAudioProcessor::Mcfx_convolverAudioProcessor() :
@@ -47,6 +44,8 @@ Thread("mtx_convolver_master"),
 _readyToSaveConfiguration(false),
 _storeConfigDataInProject(1),
 restoredConfiguration(false),
+
+tempAudioBuffer(1,256),
 
 _min_in_ch(0),
 _min_out_ch(0),
@@ -332,11 +331,8 @@ void Mcfx_convolverAudioProcessor::run()
     sendChangeMessage();
     
     //unload first....
-    if (convolverReady)
-    {
-        addNewStatus("Unloading Convolver...");
+    if (convolverReady && !isAReload)
         unloadConvolver();
-    }
     
     LoadIRMatrixFilter(getTargetFilter());
         
@@ -405,10 +401,11 @@ void Mcfx_convolverAudioProcessor::LoadIRMatrixFilter(File filterFile)
     if (!filterFile.existsAsFile())
     {
         debug.clear();
-        debug << "Filter file does not exist!";
-        addNewStatus(debug);
+        debug << "ERROR: filter file does not exist in: " ;
+        debug << filterFile.getFullPathName() << "\n\n";
+        DebugPrint(debug);
         
-        DebugPrint(debug << " in: " << filterFile.getFullPathName() << "\n\n");
+        addNewStatus("ERROR: filter file does not exist!");
         return;
     }
     
@@ -417,7 +414,6 @@ void Mcfx_convolverAudioProcessor::LoadIRMatrixFilter(File filterFile)
     //---------------------------------------------------------------------------------------------
     debug.clear();
     debug << "trying to load filter...";
-    addNewStatus(debug);
     DebugPrint(debug << filterFile.getFullPathName() << "\n\n");
     
     // debug print samplerate and buffer size
@@ -432,21 +428,30 @@ void Mcfx_convolverAudioProcessor::LoadIRMatrixFilter(File filterFile)
 
     // global settings
     /// temporary audio buffer backward compatible with old 32bit audio buffer
-    AudioSampleBuffer TempAudioBuffer(1,256); //1 channel, 256 samples
+//    AudioSampleBuffer TempAudioBuffer(1,256); //1 channel, 256 samples
     conv_data.setSampleRate(_SampleRate);
+    
+    double src_samplerate;
     
     float gain = 1.f;
     int delay = 0;
     int offset = 0;
     int length = 0;
     int inChannels = 0;
-
-    double src_samplerate;
     
     // funtion for get input channels included in this one
-    addNewStatus("Reading file...");
-    if (loadIr(&TempAudioBuffer, filterFile, -1, src_samplerate, gain, 0, 0)) // offset/length has to be done while processing individual irs
+    if (!isAReload)
     {
+        if (!loadIr(&tempAudioBuffer, filterFile, -1, src_samplerate, gain, 0, 0)) // offset/length has to be done while processing individual irs
+        {
+            debug.clear();
+            debug << "ERROR: not loaded: " << filterFile.getFullPathName();
+            DebugPrint(debug << "\n");
+            
+            addNewStatus("ERROR: selected wavefile not loaded");
+            return;
+        }
+            
         ///kill the thread if requested
         if (tempInputChannels == -2)
         {
@@ -454,23 +459,24 @@ void Mcfx_convolverAudioProcessor::LoadIRMatrixFilter(File filterFile)
             tempInputChannels = 0;
             return;
         }
+        
         bool isDiagonal;
         if(tempInputChannels == -1)
             isDiagonal = true;
         else
             isDiagonal = false;
         
-        int outChannels = TempAudioBuffer.getNumChannels();
+        int outChannels = tempAudioBuffer.getNumChannels();
         int irLength;
         
         if (isDiagonal)
         {
-            irLength = TempAudioBuffer.getNumSamples();
+            irLength = tempAudioBuffer.getNumSamples();
             inChannels = outChannels;
         }
         else
         {
-            irLength = TempAudioBuffer.getNumSamples()/tempInputChannels;
+            irLength = tempAudioBuffer.getNumSamples()/tempInputChannels;
             inChannels = tempInputChannels;
         }
          
@@ -488,10 +494,16 @@ void Mcfx_convolverAudioProcessor::LoadIRMatrixFilter(File filterFile)
             return;
         }*/
         
+        if (src_samplerate != _SampleRate)
+            filterHasBeenResampled.set(true);
+        else
+            filterHasBeenResampled.set(false);
+        
         if (length <= 0)
             length = irLength-offset;
         
         // std::cout << "TotalLength: " <<  TempAudioBuffer.getNumSamples() << " IRLength: " <<  irLength << " Used Length: " << length << " Channels: " << TempAudioBuffer.getNumChannels() << std::endl;
+        addNewStatus("Loading filter matrix into the convolver data...");
         for (int i=0; i < outChannels; i++)
         {
             for (int j=0; j < inChannels; j++)
@@ -500,21 +512,17 @@ void Mcfx_convolverAudioProcessor::LoadIRMatrixFilter(File filterFile)
                 if (isDiagonal)
                 {
                     if (i==j)
-                        conv_data.addIR(j, i, offset, delay, length, &TempAudioBuffer, i, src_samplerate);
+                        conv_data.addIR(j, i, offset, delay, length, &tempAudioBuffer, i, src_samplerate);
                 }
                 else
                 {
                     int individualOffset = j*irLength;
                     // CHECK IF LENGTH/OFFSET E.G. IS OK!!
-                    conv_data.addIR(j, i, individualOffset + offset, delay, length, &TempAudioBuffer, i, src_samplerate);
+                    conv_data.addIR(j, i, individualOffset + offset, delay, length, &tempAudioBuffer, i, src_samplerate);
                 }
                 // std::cout << "AddIR: IN: " << j << " OUT: " << i << " individualOffset: " << individualOffset << std::endl;
             }
         }
-        if (src_samplerate != _SampleRate)
-            filterHasBeenResampled.set(true);
-        else
-            filterHasBeenResampled.set(false);
         
         debug.clear();
         debug  << "Loaded " << conv_data.getNumIRs() << " filters with:" << "\n";
@@ -525,21 +533,9 @@ void Mcfx_convolverAudioProcessor::LoadIRMatrixFilter(File filterFile)
         debug  << "filename: " << filterFile.getFileName() << "\n\n";
         DebugPrint( debug );
     }
-    else
-    {
-        debug.clear();
-        debug << "ERROR: not loaded: " << filterFile.getFullPathName();
-        DebugPrint(debug << "\n");
-        
-        return;
-    }
      
     // initiate convolver with the current found parameters and filters
-    addNewStatus("Loading matrix into the convolver...");
     loadConvolver();
-    
-//    filterFileLoaded = filterFile;
-    
 
     debug.clear();
     debug << "Filter matrix loaded" << "\n";
@@ -547,8 +543,7 @@ void Mcfx_convolverAudioProcessor::LoadIRMatrixFilter(File filterFile)
     debug << "Plugin Latency: " << getLatencySamples() << "[smpls] \n";
     DebugPrint(debug << "\n\n");
     
-    String status = "Convolver ready";
-    addNewStatus(status);
+    addNewStatus("Convolver ready");
     sendChangeMessage(); // notify editor
     
     //BLOCK save config/wave as zip file
@@ -607,6 +602,7 @@ void Mcfx_convolverAudioProcessor::loadConvolver()
     zita_conv.start_process(CONVPROC_SCHEDULER_PRIORITY, CONVPROC_SCHEDULER_CLASS);
     
 #else
+    addNewStatus("Configuring convolver settings...");
     _MaxPartSize = jmin(MAX_PART_SIZE, nextPowerOfTwo(_MaxPartSize));
 
     // try autodetecting host and deciding whether we need safemode (to avoid having to add another user parameter - let's see how this works for testers)
@@ -657,8 +653,9 @@ void Mcfx_convolverAudioProcessor::unloadConvolver()
     debug << "Unloading Convolver..." << "\n";
     DebugPrint(debug);
     
-    // delete configuration
+    addNewStatus("Unloading Convolver...");
     
+    // delete configuration
     _conv_in.clear();
     _conv_out.clear();
     
@@ -687,6 +684,8 @@ void Mcfx_convolverAudioProcessor::unloadConvolver()
     debug.clear();
     debug << "Convolver settings unloaded" << "\n\n";
     DebugPrint(debug); // clear debug window
+    
+    addNewStatus("Convolver settings unloaded");
 }
 
 void Mcfx_convolverAudioProcessor::getInChannels(int waveFileLength)
@@ -798,6 +797,7 @@ bool Mcfx_convolverAudioProcessor::loadIr(AudioSampleBuffer* IRBuffer, const Fil
     
     AudioSampleBuffer ReadBuffer(reader->numChannels, length); // create buffer
     
+    addNewStatus("Reading file...");
     reader->read(&ReadBuffer, 0, length, offset, true, true);
     
     // set the samplerate -> maybe we have to resample later...
@@ -1210,6 +1210,7 @@ void Mcfx_convolverAudioProcessor::getStateInformation (MemoryBlock& destData)
             xml.setAttribute ("targetWasInMenu", (bool)true);
         
         xml.setAttribute("filterFullPathName", targetFilter.getFullPathName());
+        xml.setAttribute("masterGain", masterGain.get());
     }
     
     // then use this helper function to stuff it into the binary blob and return it..
