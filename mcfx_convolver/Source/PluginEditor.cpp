@@ -503,7 +503,7 @@ void Mcfx_convolverAudioProcessorEditor::sliderValueChanged(Slider *slider)
     if (slider == &view.ioDetailBox.gainKnob)
     {
         if(view.ioDetailBox.gainKnob.getValue() != -60)
-            processor.masterGain.set(juce::Decibels::decibelsToGain(view.ioDetailBox.gainKnob.getValue()));
+            processor.masterGain.set(view.ioDetailBox.gainKnob.getValue());
         else
             processor.masterGain.set(0);
     }

@@ -28,7 +28,6 @@
     #define Sleep(x) usleep((x)*1000)
 #endif
 
-
 #define CONVPROC_SCHEDULER_PRIORITY 0
 #define CONVPROC_SCHEDULER_CLASS SCHED_FIFO
 #define THREAD_SYNC_MODE true
@@ -36,10 +35,10 @@
 #define MAX_PART_SIZE 65536
 
 //==============================================================================
-Mcfx_convolverAudioProcessor::Mcfx_convolverAudioProcessor() :
+Mcfx_convolverAudioProcessor::Mcfx_convolverAudioProcessor() : /*
 AudioProcessor (BusesProperties()   .withInput  ("MainInput",  juce::AudioChannelSet::discreteChannels(NUM_CHANNELS), true )
                                     .withOutput ("MainOutput", juce::AudioChannelSet::discreteChannels(NUM_CHANNELS), true )
-                                    ),
+                                    ), */
 Thread("mtx_convolver_master"),
 _readyToSaveConfiguration(false),
 _storeConfigDataInProject(1),
@@ -67,7 +66,8 @@ tempInputChannels(0),
 storeInChannelIntoWav(false),
 storedInChannels(0),
 
-masterGain(1),
+masterGain(0),
+storedGain(nullptr),
 
 _paramReload(false),
 _skippedCycles(0),
@@ -97,8 +97,6 @@ newStatusText(false)
     
     // this is for the open dialog of the gui
     lastSearchDir = lastSearchDir.getSpecialLocation(File::userHomeDirectory);
-    
-    addParameter (gain = new juce::AudioParameterFloat ("gain", "Gain", 0.0f, 12.0f, 1.0f)); //ID, Name, Min, Max, default
 }
 
 Mcfx_convolverAudioProcessor::~Mcfx_convolverAudioProcessor()
@@ -117,20 +115,11 @@ Mcfx_convolverAudioProcessor::~Mcfx_convolverAudioProcessor()
 }
 
 //==============================================================================
-const String Mcfx_convolverAudioProcessor::getName() const
-{
-    return JucePlugin_Name;
-}
+const String Mcfx_convolverAudioProcessor::getName() const                      { return JucePlugin_Name; }
 
-int Mcfx_convolverAudioProcessor::getNumParameters()
-{
-    return 1;
-}
+int Mcfx_convolverAudioProcessor::getNumParameters()                            { return 1;}
 
-float Mcfx_convolverAudioProcessor::getParameter (int index)
-{
-    return (float)_paramReload;
-}
+float Mcfx_convolverAudioProcessor::getParameter (int index)                    { return (float)_paramReload;}
 
 void Mcfx_convolverAudioProcessor::setParameter (int index, float newValue)
 {
@@ -141,10 +130,7 @@ void Mcfx_convolverAudioProcessor::setParameter (int index, float newValue)
     _paramReload = newParamReload;
 }
 
-const String Mcfx_convolverAudioProcessor::getParameterName (int index)
-{
-    return "ReloadConfig";
-}
+const String Mcfx_convolverAudioProcessor::getParameterName (int index)         { return "ReloadConfig"; }
 
 const String Mcfx_convolverAudioProcessor::getParameterText (int index)
 {
@@ -154,34 +140,28 @@ const String Mcfx_convolverAudioProcessor::getParameterText (int index)
         return "";
 }
 
-const String Mcfx_convolverAudioProcessor::getInputChannelName (int channelIndex) const
-{
-    return String (channelIndex + 1);
-}
+const String Mcfx_convolverAudioProcessor::getInputChannelName (int channelIndex) const     { return String (channelIndex + 1); }
 
-const String Mcfx_convolverAudioProcessor::getOutputChannelName (int channelIndex) const
-{
-    return String (channelIndex + 1);
-}
+const String Mcfx_convolverAudioProcessor::getOutputChannelName (int channelIndex) const    { return String (channelIndex + 1); }
 
-bool Mcfx_convolverAudioProcessor::isInputChannelStereoPair (int index) const
-{
-    return true;
-}
+bool Mcfx_convolverAudioProcessor::isInputChannelStereoPair (int index) const               { return true; }
 
-bool Mcfx_convolverAudioProcessor::isOutputChannelStereoPair (int index) const
-{
-    return true;
-}
+bool Mcfx_convolverAudioProcessor::isOutputChannelStereoPair (int index) const              { return true; }
 
+/*
 bool Mcfx_convolverAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
     if (layouts.getMainInputChannelSet()  == juce::AudioChannelSet::disabled()
      || layouts.getMainOutputChannelSet() == juce::AudioChannelSet::disabled())
         return false;
     
-    return (layouts.getMainInputChannelSet() == layouts.getMainOutputChannelSet());
-}
+    if (layouts.getMainInputChannelSet()    != juce::AudioChannelSet::discreteChannels(12)
+     && layouts.getMainOutputChannelSet()   != juce::AudioChannelSet::discreteChannels(19))
+        return false;
+    
+    return true;
+    //(layouts.getMainInputChannelSet() == layouts.getMainOutputChannelSet());
+}*/
 
 bool Mcfx_convolverAudioProcessor::acceptsMidi() const
 {
@@ -201,10 +181,7 @@ bool Mcfx_convolverAudioProcessor::producesMidi() const
    #endif
 }
 
-bool Mcfx_convolverAudioProcessor::silenceInProducesSilenceOut() const
-{
-    return false;
-}
+bool Mcfx_convolverAudioProcessor::silenceInProducesSilenceOut() const { return false; }
 
 double Mcfx_convolverAudioProcessor::getTailLengthSeconds() const
 {
@@ -219,28 +196,15 @@ double Mcfx_convolverAudioProcessor::getTailLengthSeconds() const
     }
 }
 
-int Mcfx_convolverAudioProcessor::getNumPrograms()
-{
-    return 0;
-}
+int Mcfx_convolverAudioProcessor::getNumPrograms()                                      { return 0; }
 
-int Mcfx_convolverAudioProcessor::getCurrentProgram()
-{
-    return 0;
-}
+int Mcfx_convolverAudioProcessor::getCurrentProgram()                                   { return 0; }
 
-void Mcfx_convolverAudioProcessor::setCurrentProgram (int index)
-{
-}
+void Mcfx_convolverAudioProcessor::setCurrentProgram (int index)                        { }
 
-const String Mcfx_convolverAudioProcessor::getProgramName (int index)
-{
-    return String();
-}
+const String Mcfx_convolverAudioProcessor::getProgramName (int index)                   { return String(); }
 
-void Mcfx_convolverAudioProcessor::changeProgramName (int index, const String& newName)
-{
-}
+void Mcfx_convolverAudioProcessor::changeProgramName (int index, const String& newName) { }
 
 //==============================================================================
 
@@ -310,7 +274,7 @@ void Mcfx_convolverAudioProcessor::processBlock (AudioSampleBuffer& buffer, Midi
 #else
         //mtxconv_.processBlock(buffer, buffer, isNonRealtime()); // if isNotRealtime always set to true!
         mtxconv_.processBlock(buffer, buffer, NumSamples, true); // try to always wait except - add a special flag to deactivate waiting...
-        buffer.applyGain(masterGain.get());
+        buffer.applyGain(juce::Decibels::decibelsToGain(masterGain.get()));
         _skippedCycles.set(mtxconv_.getSkipCount());
         
 #endif
@@ -480,7 +444,7 @@ void Mcfx_convolverAudioProcessor::LoadIRMatrixFilter(File filterFile)
             inChannels = tempInputChannels;
         }
          
-        /*
+        
         if ((inChannels > getTotalNumInputChannels()) || outChannels > getTotalNumOutputChannels())
         {
             debug.clear();
@@ -489,10 +453,10 @@ void Mcfx_convolverAudioProcessor::LoadIRMatrixFilter(File filterFile)
             DebugPrint( debug );
             
             String status;
-            status << "ERROR: In/Out plugin channels not feasible. " << "Need " << inChannels << " ins, " << outChannels << " outs";
+            status << "ERROR: In/Out plugin channels not feasible. Need at least " << inChannels << " ins, " << outChannels << " outs";
             addNewStatus(status);
             return;
-        }*/
+        }
         
         if (src_samplerate != _SampleRate)
             filterHasBeenResampled.set(true);
@@ -503,6 +467,7 @@ void Mcfx_convolverAudioProcessor::LoadIRMatrixFilter(File filterFile)
             length = irLength-offset;
         
         // std::cout << "TotalLength: " <<  TempAudioBuffer.getNumSamples() << " IRLength: " <<  irLength << " Used Length: " << length << " Channels: " << TempAudioBuffer.getNumChannels() << std::endl;
+        
         addNewStatus("Loading filter matrix into the convolver data...");
         for (int i=0; i < outChannels; i++)
         {
@@ -543,10 +508,20 @@ void Mcfx_convolverAudioProcessor::LoadIRMatrixFilter(File filterFile)
     debug << "Plugin Latency: " << getLatencySamples() << "[smpls] \n";
     DebugPrint(debug << "\n\n");
     
+    // search for the input channels number into the wavefile metadata tags
+    if (storedGain != nullptr)
+    {
+        masterGain.set(*storedGain);
+        storedGain = nullptr;
+    }
+    else
+        masterGain.set(0);
+    
     addNewStatus("Convolver ready");
     sendChangeMessage(); // notify editor
     
     //BLOCK save config/wave as zip file
+    ///DEPRECATED
     /*
     _tempConfigZipFile = _tempConfigZipFile.createTempFile(".zip");
     _cleanUpFilesOnExit.add(_tempConfigZipFile);
@@ -1210,6 +1185,7 @@ void Mcfx_convolverAudioProcessor::getStateInformation (MemoryBlock& destData)
             xml.setAttribute ("targetWasInMenu", (bool)true);
         
         xml.setAttribute("filterFullPathName", targetFilter.getFullPathName());
+        auto test = masterGain.get();
         xml.setAttribute("masterGain", masterGain.get());
     }
     
@@ -1295,6 +1271,10 @@ void Mcfx_convolverAudioProcessor::setStateInformation (const void* data, int si
                     if (filterIndex != -1)
                     {
                         storedInChannels = xmlState->getIntAttribute("inputChannelsNumber", 0);
+                        storedGain = new float((float)xmlState->getDoubleAttribute("masterGain",9999));
+                        if (*storedGain == 9999)
+                            storedGain = nullptr;
+                        
                         LoadFilterFromMenu(filterIndex, true);
                         return;
                     }
@@ -1311,6 +1291,10 @@ void Mcfx_convolverAudioProcessor::setStateInformation (const void* data, int si
                 if(targetFilter.existsAsFile())
                 {
                     storedInChannels = xmlState->getIntAttribute("inputChannelsNumber", 0);
+                    storedGain = new float((float)xmlState->getDoubleAttribute("masterGain",9999));
+                    if (*storedGain == 9999)
+                        storedGain = nullptr;
+                    
                     LoadFilterFromFile(targetFilter, true);
                     return;
                 }
