@@ -60,7 +60,7 @@ holdNumInputChannel(false),
 changeNumInputChannels(false),
 numInputsStatus(NumInputsStatus::agreed),
 tempNumInputs(0),
-storeNumInputsIntoWav(false),
+//storeNumInputsIntoWav(false),
 storedInChannels(0),
 
 readyToExportWavefile(false),
@@ -839,7 +839,9 @@ bool Mcfx_convolverAudioProcessor::loadIr(AudioSampleBuffer* IRBuffer, const Fil
         addNewStatus("Waiting for user input...");
         getInChannels(IRBuffer->getNumSamples());
         
+        //DEPRECATED
         /// write the new value in metadata tag
+        /*
         if (storeNumInputsIntoWav.get())
         {
             addNewStatus("Storing number of input channel into wavefile metadata...");
@@ -864,6 +866,7 @@ bool Mcfx_convolverAudioProcessor::loadIr(AudioSampleBuffer* IRBuffer, const Fil
             writer->writeFromAudioSampleBuffer(bufferRead, 0, bufferRead.getNumSamples());
             delete writer;
         }
+         */
     }
     
     delete reader;
