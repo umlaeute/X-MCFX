@@ -1,4 +1,9 @@
 /*
+<<<<<<< HEAD
+=======
+ ==============================================================================
+ 
+>>>>>>> 71e302b0336e90e59dc9e41f60ffb3479dd7bf05
  This file is part of the mcfx (Multichannel Effects) plug-in suite.
  Copyright (c) 2013/2014 - Matthias Kronlachner
  www.matthiaskronlachner.com
@@ -33,11 +38,9 @@ class Mcfx_convolverAudioProcessorEditor  : public AudioProcessorEditor,
                                             public ComboBox::Listener,
                                             public Slider::Listener,
                                             public Timer,
-                                            public TextEditor::Listener,
-                                            public KeyListener
+                                            public TextEditor::Listener
 {
 public:
-    //Mcfx_convolverAudioProcessorEditor (Mcfx_convolverAudioProcessor* ownerFilter);
     Mcfx_convolverAudioProcessorEditor (Mcfx_convolverAudioProcessor&);
 
     ~Mcfx_convolverAudioProcessorEditor();
@@ -47,56 +50,39 @@ public:
     void paint (Graphics& g);
     
     void resized();
-
-    void buttonClicked (Button* buttonThatWasClicked);
+    
+    void timerCallback();
     
     void changeListenerCallback (ChangeBroadcaster *source);
     
-    void comboBoxChanged (ComboBox* comboBoxThatHasChanged);
-    
-    void textEditorFocusLost(TextEditor& ed);
-    
-    void textEditorReturnKeyPressed(TextEditor& ed);
-
-    static void menuItemChosenCallback (int result, Mcfx_convolverAudioProcessorEditor* demoComponent);
-    
-    static void righClickButtonCallback (int result, Mcfx_convolverAudioProcessorEditor* demoComponent);
+    void UpdateText();
     
     void UpdateFiltersMenu();
     
-    void UpdateText();
+    void buttonClicked (Button* buttonThatWasClicked);
     
-    void timerCallback();
+    static void righClickButtonCallback (int result, Mcfx_convolverAudioProcessorEditor* demoComponent);
+    
+    static void menuItemChosenCallback (int result, Mcfx_convolverAudioProcessorEditor* demoComponent);
+    
+    void comboBoxChanged (ComboBox* comboBoxThatHasChanged);
     
     int getInputChannelFromDialog();
     
     void sliderValueChanged(Slider *slider);
-    
-    bool keyPressed (const KeyPress& key,
-    Component* originatingComponent);
-    
-    bool keyStateChanged (bool isKeyDown, Component* originatingComponent);
 
 private:
-//    Mcfx_convolverAudioProcessor* getProcessor() const
-//    {
-//        return static_cast <Mcfx_convolverAudioProcessor*> (getAudioProcessor());
-//    }
-
     Mcfx_convolverAudioProcessor& processor;
     
     View view;
 
     TooltipWindow tooltipWindow;
+    
+    PopupMenu setNewGeneralPath;
 
     PopupMenu filterMenu;
     OwnedArray<PopupMenu> filterSubmenus;
-    
-    PopupMenu setNewGeneralPath;
-    
-//    LookAndFeel_V4 MyLookAndFeel;
 };
-
 
 
 #endif  // PLUGINEDITOR_H_INCLUDED
