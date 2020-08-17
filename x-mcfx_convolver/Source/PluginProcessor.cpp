@@ -20,7 +20,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
-
 #ifdef _WINDOWS
     #include <windows.h>
 #else
@@ -217,7 +216,6 @@ const String Mcfx_convolverAudioProcessor::getProgramName (int index)           
 void Mcfx_convolverAudioProcessor::changeProgramName (int index, const String& newName) { }
 
 //==============================================================================
-
 void Mcfx_convolverAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     //line-up in case host samplerate/buffer changes
@@ -275,7 +273,6 @@ void Mcfx_convolverAudioProcessor::processBlock (AudioSampleBuffer& buffer, Midi
         }
 
             zita_conv.process(THREAD_SYNC_MODE);
-
         for (int i=0; i < jmin(conv_data.getNumOutputChannels(), getNumOutputChannels()) ; i++)
         {
             float* outdata = zita_conv.outdata(i)+_ConvBufferPos;
