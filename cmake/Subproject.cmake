@@ -2,6 +2,7 @@ get_filename_component(SUBDIRNAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
 # add_definitions(-DNUM_CHANNELS=${NUM_CHANNELS})
 add_definitions(-DNUM_OUT_CHANNELS=${NUM_OUT_CHANNELS})
+add_definitions(-DNUM_IN_CHANNELS=${NUM_IN_CHANNELS})
 
 set(LABEL_SUFFIX _${NUM_IN_CHANNELS}x${NUM_OUT_CHANNELS})
 

@@ -48,7 +48,7 @@ _scale_right(163, true)
     tooltipWindow.setMillisecondsBeforeTipAppears (500); // tooltip delay
     
     String label_text = "mcfx_meter";
-    label_text << NUM_CHANNELS;
+    label_text << NUM_IN_CHANNELS;
     
     addAndMakeVisible (label);
     label.setText(label_text, dontSendNotification);
@@ -118,7 +118,7 @@ _scale_right(163, true)
     sld_offset.setDoubleClickReturnValue(true, 0.f);
     
     // create meters and labels!
-    for (int i=0; i<NUM_CHANNELS; i++)
+    for (int i=0; i<NUM_IN_CHANNELS; i++)
     {
         if (MeterComponent* const METER = new MeterComponent())
         {
@@ -145,9 +145,9 @@ _scale_right(163, true)
     //[/UserPreSize]
 
     // make space between each group of eight
-    int gr_of_eight = NUM_CHANNELS / GROUP_CHANNELS;
+    int gr_of_eight = NUM_IN_CHANNELS / GROUP_CHANNELS;
     
-    _width = 50 + METER_WIDTH * NUM_CHANNELS + 50 + gr_of_eight*METER_GROUP_SPACE;
+    _width = 50 + METER_WIDTH * NUM_IN_CHANNELS + 50 + gr_of_eight*METER_GROUP_SPACE;
     setSize (_width, 220);
 
     // register as change listener (gui/dsp sync)
@@ -225,7 +225,7 @@ void Ambix_meterAudioProcessorEditor::resized()
     
     sld_offset.setBounds (4, 23, 18, 167);
     
-    for (int i=0; i<NUM_CHANNELS; i++)
+    for (int i=0; i<NUM_IN_CHANNELS; i++)
     {
         int group = i / GROUP_CHANNELS;
         
@@ -288,7 +288,7 @@ void Ambix_meterAudioProcessorEditor::timerCallback() // update meters
     Ambix_meterAudioProcessor* ourProcessor = getProcessor();
     
     
-    for (int i=0; i<NUM_CHANNELS; i++)
+    for (int i=0; i<NUM_IN_CHANNELS; i++)
     {
         // _meters.getUnchecked(i)->setValue(ourProcessor->_rms.getUnchecked(i), ourProcessor->_peak.getUnchecked(i));
         _meters.getUnchecked(i)->setValue(ourProcessor->_my_meter_dsp.getUnchecked(i)->getRMS(), ourProcessor->_my_meter_dsp.getUnchecked(i)->getPeak(), ourProcessor->_my_meter_dsp.getUnchecked(i)->getPeakHold());
@@ -309,7 +309,7 @@ void Ambix_meterAudioProcessorEditor::changeListenerCallback (ChangeBroadcaster 
     _scale_left.offset(sld_offset.getValue());
     _scale_right.offset(sld_offset.getValue());
     
-    for (int i=0; i<NUM_CHANNELS; i++)
+    for (int i=0; i<NUM_IN_CHANNELS; i++)
     {
         _meters.getUnchecked(i)->offset( (int)ourProcessor->_offset);
         _meters.getUnchecked(i)->_peak_hold = ourProcessor->_pk_hold;
@@ -321,7 +321,7 @@ void Ambix_meterAudioProcessorEditor::mouseDown (const MouseEvent& e)
 {
     Ambix_meterAudioProcessor* ourProcessor = getProcessor();
     //[UserCode_mouseDown] -- Add your code here...
-    for (int i=0; i<NUM_CHANNELS; i++)
+    for (int i=0; i<NUM_IN_CHANNELS; i++)
     {
         
         // ourProcessor->_kmdsp.getUnchecked(i)->reset();

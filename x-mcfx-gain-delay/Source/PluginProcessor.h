@@ -28,6 +28,10 @@
 // number of parameters per channel
 #define PARAMS_PER_CH 6
 
+#if (!defined NUM_CHANNELS) && (NUM_IN_CHANNELS == NUM_OUT_CHANNELS)
+# define NUM_CHANNELS NUM_IN_CHANNELS
+#endif
+
 //==============================================================================
 /**
 */

@@ -35,8 +35,8 @@
 
 //==============================================================================
 Mcfx_convolverAudioProcessor::Mcfx_convolverAudioProcessor() : /*
-AudioProcessor (BusesProperties()   .withInput  ("MainInput",  juce::AudioChannelSet::discreteChannels(NUM_CHANNELS), true )
-                                    .withOutput ("MainOutput", juce::AudioChannelSet::discreteChannels(NUM_CHANNELS), true )
+AudioProcessor (BusesProperties()   .withInput  ("MainInput",  juce::AudioChannelSet::discreteChannels(NUM_IN_CHANNELS), true )
+                                    .withOutput ("MainOutput", juce::AudioChannelSet::discreteChannels(NUM_OUT_CHANNELS), true )
                                     ), */
 Thread("mtx_convolver_master")
 , restoredSettings(false)

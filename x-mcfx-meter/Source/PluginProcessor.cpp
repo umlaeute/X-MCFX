@@ -28,7 +28,7 @@ _fall(15.0f),
 _pk_hold(false),
 _offset(0.f)
 {
-    for (int i=0; i<NUM_CHANNELS; i++)
+    for (int i=0; i<NUM_IN_CHANNELS; i++)
     {
         _my_meter_dsp.add(new MyMeterDsp());
         _my_meter_dsp.getUnchecked(i)->setAudioParams((int)getSampleRate(), getBlockSize());
@@ -82,7 +82,7 @@ void Ambix_meterAudioProcessor::setParameter (int index, float newValue)
     switch (index) {
         case HoldParam:
             _hold = newValue*5.f;
-            for (int i=0; i<NUM_CHANNELS; i++)
+            for (int i=0; i<NUM_IN_CHANNELS; i++)
             {
                 _my_meter_dsp.getUnchecked(i)->setParams(_hold, _fall);
             }
@@ -90,7 +90,7 @@ void Ambix_meterAudioProcessor::setParameter (int index, float newValue)
             
         case FallParam:
             _fall = newValue*99.f;
-            for (int i=0; i<NUM_CHANNELS; i++)
+            for (int i=0; i<NUM_IN_CHANNELS; i++)
             {
                 _my_meter_dsp.getUnchecked(i)->setParams(_hold, _fall);
             }
@@ -239,7 +239,7 @@ void Ambix_meterAudioProcessor::changeProgramName (int index, const String& newN
 //==============================================================================
 void Ambix_meterAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    for (int i=0; i<NUM_CHANNELS; i++)
+    for (int i=0; i<NUM_IN_CHANNELS; i++)
     {
         _my_meter_dsp.getUnchecked(i)->setAudioParams((int)sampleRate, samplesPerBlock);
         _my_meter_dsp.getUnchecked(i)->setParams(_hold, _fall);
