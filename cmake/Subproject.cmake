@@ -191,10 +191,16 @@ endif(WITH_ZITA_CONVOLVER)
 
 if(WITH_FFTW3)
 	# MESSAGE( STATUS "LINKING FFTW3F: " ${FFTW3F_LIBRARY} )
+ if(WIN32)
 	target_link_libraries( ${SUBPROJECT_NAME} PRIVATE
 		${FFTW3F_LIBRARY}
-		#${FFTW3F_THREADS_LIBRARY}
 	)
+ else(WIN32)
+	target_link_libraries( ${SUBPROJECT_NAME} PRIVATE
+		${FFTW3F_LIBRARY}
+		${FFTW3F_THREADS_LIBRARY}
+	)
+ endif(WIN32)
 	#juce_add_bundle_resources_directory(${SUBPROJECT_NAME}_Standalone "${SRC_DIR}/Bundle-resources/fftw3")
 endif(WITH_FFTW3)
 
