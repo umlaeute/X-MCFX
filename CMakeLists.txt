@@ -156,7 +156,7 @@ if(UNIX AND NOT APPLE AND NOT ANDROID)
 	if(WITH_ZITA_CONVOLVER)
 		find_package(libzita-convolver REQUIRED)
 		include_directories(${LIBZITACONVOLVER_INCLUDE_DIRS})
-		add_definitions(-DWITH_ZITA_CONVOLVER=1)
+		add_definitions(-DUSE_ZITA_CONVOLVER=1)
 	endif(WITH_ZITA_CONVOLVER)
 
 	#add sse
